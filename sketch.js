@@ -5,16 +5,14 @@ const Constraint = Matter.Constraint;
 
 var engine, world;
 var canvas;
-var palyer, playerBase, playerArcher;
-var computer, computerBase, computerArcher;
+var palyer, playerBase;
+var computer, computerBase;
+
+//Declare an array for arrows playerArrows = [ ]
 var playerArrows = [];
-var computerArrows = [];
-var playerArcherLife = 3;
-var computerArcherLife = 3;
-var computerCollision
-function preload() {
-  backgroundImg = loadImage("./assets/background.gif");
-}
+
+var arrow;
+
 
 function setup() {
   canvas = createCanvas(windowWidth, windowHeight);
@@ -43,18 +41,20 @@ function setup() {
     50,
     180
   );
-
   computerArcher = new ComputerArcher(
-    width - 350,
+    width - 340,
     computerBase.body.position.y - 180,
     120,
     120
   );
-  handleComputerArcher();
+  
+ 
+
+
 }
 
 function draw() {
-  background(backgroundImg);
+  background(180);
 
   Engine.update(engine);
 
@@ -64,175 +64,67 @@ function draw() {
   textSize(40);
   text("EPIC ARCHERY", width / 2, 100);
 
-  for (var i = 0; i < playerArrows.length; i++) {
-    showArrows(i, playerArrows);
-  }
-
+ 
   playerBase.display();
   player.display();
-  player.life();
-  playerArcher.display();
-  handlePlayerArrowCollision();
-
-  for (var i = 0; i < computerArrows.length; i++) {
-    showArrows(i, computerArrows);
-  }
+  
 
   computerBase.display();
   computer.display();
-  computer.life();
-  computerArcher.display();
-  handleComputerArrowCollision();
+  
+  playerArcher.display();
+  computerArcher.display()
+
+ 
+ for (var i=0; i<playerArrows; i++) 
+ {
+ showArrows(i, playerArrows);
+ }
+
+
+
+
+
+
 }
 
+/*********** Choose correct keyPressed() function out of these *************/
+
 function keyPressed() {
-  if (keyCode === 32) {
+  if(keyCode === 32){
+    // create an arrow object and add into an array ; set its angle same as angle of playerArcher
     var posX = playerArcher.body.position.x;
     var posY = playerArcher.body.position.y;
-    var angle = playerArcher.body.angle;
-
-    var arrow = new PlayerArrow(posX, posY, 100, 10, angle);
-
+    var angle = playerArcher.body
+    var arrow = new PlayerArrow(posX, posY, 100, 10);
     arrow.trajectory = [];
-    Matter.Body.setAngle(arrow.body, angle);
+    Matter.Body.setAngle(arrow.body);
     playerArrows.push(arrow);
   }
 }
 
-function keyReleased() {
-  if (keyCode === 32) {
+
+
+
+
+
+function keyReleased () {
+
+  if(keyCode === 32){
+    //call shoot() function for each arrow in an array playerArrows
     if (playerArrows.length) {
-      var angle = playerArcher.body.angle;
+      var angle = playerArcher.body.angle+PI/2;
       playerArrows[playerArrows.length - 1].shoot(angle);
     }
   }
-}
 
+}
+//Display arrow and Tranjectory
 function showArrows(index, arrows) {
   arrows[index].display();
-  if (
-    arrows[index].body.position.x > width ||
-    arrows[index].body.position.y > height
-  ) {
-    if (!arrows[index].isRemoved) {
-      arrows[index].remove(index, arrows);
-    } else {
-      arrows[index].trajectory = [];
-    }
-  }
-}
+  
+    
+  
+ 
 
-function handleComputerArcher() {
-  if (!computerArcher.collapse && !playerArcher.collapse) {
-    setTimeout(() => {
-      var pos = computerArcher.body.position;
-      var angle = computerArcher.body.angle;
-      var moves = ["UP", "DOWN"];
-      var move = random(moves);
-      var angleValue;
-
-      if (move === "UP" && computerArcher.body.angle < 1.87) {
-        angleValue = 0.1;
-      }else{
-          angleValue = -0.1;
-      }
-      if(move === "DOWN" && computerArcher.body.angle > 1.47) {
-        angleValue = -0.1;
-      }else{
-          angleValue = 0.1;
-      }
-      
-      angle += angleValue;
-
-      var arrow = new ComputerArrow(pos.x, pos.y, 100, 10, angle);
-
-      Matter.Body.setAngle(computerArcher.body, angle);
-      Matter.Body.setAngle(computerArcher.body, angle);
-
-      computerArrows.push(arrow);
-      setTimeout(() => {
-        computerArrows[computerArrows.length - 1].shoot(angle);
-      }, 100);
-
-      handleComputerArcher();
-    }, 2000);
-  }
-}
-
-function handlePlayerArrowCollision() {
-  for (var i = 0; i < playerArrows.length; i++) {
-    var baseCollision = Matter.SAT.collides(
-      playerArrows[i].body,
-      computerBase.body
-    );
-
-     var computerCollision = Matter.SAT.collides(
-      playerArrows[i].body,
-      computer.body
-    );
-
-    var computerArcherCollision = Matter.SAT.collides(
-      playerArrows[i].body,
-      computerArcher.body
-    );
-
-    if (
-      baseCollision.collided ||
-      computerArcherCollision.collided ||
-      computerCollision.collided
-    ) {
-
-      /**Update the code here so that computer life 
-      reduces if player's arrow hits the target***/
-      playerArcherLife -= 0;
-      player.reduceLife(playerArcherLife);
-
-      if (computerArcherLife <= 0) {
-        computerArcher.collapse = true;
-        Matter.Body.setStatic(computerArcher.body, false);
-        Matter.Body.setStatic(computer.body, false);
-        Matter.Body.setPosition(computer.body, {
-          x: width - 100,
-          y: computer.body.position.y
-        });
-      }
-    }
-  }
-}
-
-function handleComputerArrowCollision() {
-  for (var i = 0; i < computerArrows.length; i++) {
-    var baseCollision = Matter.SAT.collides(
-      computerArrows[i].body,
-      playerBase.body
-    );
-
-    var playerCollision = Matter.SAT.collides(
-      computerArrows[i].body,
-      player.body
-    );
-
-    var playerArcherCollision = Matter.SAT.collides(
-      computerArrows[i].body,
-      playerArcher.body
-    );
-
-    if (
-      baseCollision.collided ||
-      playerCollision.collided||
-      playerArcherCollision.collided
-    ) {
-      playerArcherLife -= 1;
-      player.reduceLife(playerArcherLife);
-      if (playerArcherLife <= 0) {
-        playerArcher.collapse = true;
-        Matter.Body.setStatic(playerArcher.body, false);
-        Matter.Body.setStatic(player.body, false);
-        Matter.Body.setPosition(player.body, {
-          x: 100,
-          y: player.body.position.y
-        });
-      }
-    }
-  }
 }
